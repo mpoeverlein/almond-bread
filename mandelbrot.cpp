@@ -214,13 +214,18 @@ int main(void)
         glfwGetFramebufferSize(window, &width, &height);
         const float ratio = width / (float) height;
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            // Update parameters and recreate vertices
-            real_0 += 0.1f; // Example: Move right
-            fprintf(stderr, "Button press: right key");
-            vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
-        } else {
-            vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+            real_0 += 0.1f / zoom_factor;
+            // ./vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+        } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            real_0 -= 0.1f / zoom_factor;
+        } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            imaginary_0 += 0.1f / zoom_factor;
+        } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            imaginary_0 -= 0.1f / zoom_factor;
         }
+
+        vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+
 
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
