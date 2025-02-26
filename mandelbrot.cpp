@@ -80,22 +80,27 @@ std::vector<float> copyArray(std::vector<float>& arr)
 
 std::vector<Vertex> createVertices(int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
+    /*
+    width: window in int
+    real_0: center of screen
+    */
 
     float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
-    float xStart = real_0;
-    std::cout << xStart << "\n";
-    float xEnd = xStart + (2.2 / zoom_factor);
+    float xStart = real_0 - (1.1 / zoom_factor);
+    // std::cout << xStart << "\n";
+    float xEnd = real_0 + (1.1 / zoom_factor);
     float dx = (xEnd - xStart) / xSteps;
     
     float y;
     int ySteps = height;
-    float yStart = imaginary_0;
-    float yEnd = (imaginary_0 + (2.2 / zoom_factor)) * (float(width) / float(height));
+    float yStart = (imaginary_0 - (1.1 / zoom_factor) * (float(width) / float(height)));
+    float yEnd = (imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height)));
     float dy = (yEnd - yStart) / ySteps;
 
-    std::cout << xStart << " " << xEnd << "\t" << yStart << " " << yEnd << "\n";
+    // std::cout << xStart << " " << xEnd << "\t" << yStart << " " << yEnd << "\n";
+    std::cout << "ratio" << (yEnd-yStart) / (xEnd-xStart) << "\n";
 
     int nIterations = 100;
 
@@ -145,8 +150,8 @@ int main(void)
 {
     int width = 1000;
     int height = 1000;
-    float real_0 = -1.7;
-    float imaginary_0 = -1.1;
+    float real_0 = -0.6;
+    float imaginary_0 = 0.0f;
     float zoom_factor = 1.0f;
     std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
      
@@ -213,19 +218,28 @@ int main(void)
     {
         glfwGetFramebufferSize(window, &width, &height);
         const float ratio = width / (float) height;
+        bool update_vertices = true;
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             real_0 += 0.1f / zoom_factor;
-            // ./vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
         } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
             real_0 -= 0.1f / zoom_factor;
         } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
             imaginary_0 += 0.1f / zoom_factor;
         } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
             imaginary_0 -= 0.1f / zoom_factor;
+        } else if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) {
+            zoom_factor *= 1.5f;
+        } else if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
+            zoom_factor /= 1.5f;
+        } else {
+            update_vertices = false;
         }
 
-        vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+        // std::cout << update_vertices << "\n";
 
+        if (update_vertices) {
+        vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+        }
 
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
@@ -240,7 +254,7 @@ int main(void)
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) &m);
         glBindVertexArray(vertex_array);
         glDrawArrays(GL_POINTS, 0, vertices.size());
-        std::cout << vertices[0].true_position[0] << "\t" << vertices[0].position[0] << "\n";
+        // std::cout << vertices[0].true_position[0] << "\t" << vertices[0].position[0] << "\n";
  
         glfwSwapBuffers(window);
         glfwPollEvents();
