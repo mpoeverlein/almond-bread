@@ -54,12 +54,20 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
-
-int iterateMandelbrot(float a, float b, int maxRepetitions)
+/**
+ * @brief
+ * For a complex number c = a + bi, count how many iterations it takes
+ * until the magnitude of z_n = z^2_n-1 + c is larger than 2.
+ * 
+ * @param a real value of input complex number
+ * @param b imaginary value of input complex number
+ * @param maxIterations after how many interations to stop
+ */
+int iterateMandelbrot(float a, float b, int maxIterations)
 {
     float tmp_a = a;
     float tmp_b = b;
-    for (int i = 0; i < maxRepetitions; ++i) {
+    for (int i = 0; i < maxIterations; ++i) {
         float original_a = tmp_a;
         float original_b = tmp_b;
         tmp_a = original_a*original_a - original_b*original_b + a;
@@ -68,7 +76,7 @@ int iterateMandelbrot(float a, float b, int maxRepetitions)
             return i;
         }
     }
-    return maxRepetitions;
+    return maxIterations;
 
 }
 
@@ -77,30 +85,35 @@ std::vector<float> copyArray(std::vector<float>& arr)
     return arr;
 }
 
-
+/**
+ * @brief
+ * Calculate color values of all pixels in the window
+ * 
+ * @param width window width
+ * @param height window height
+ * @param real_0 real value of window center
+ * @param imaginary_0 imaginary value of window center
+ * @param zoom_factor If 1, window width accounts for real value length of 2.2
+ */
 std::vector<Vertex> createVertices(int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
-    /*
-    width: window in int
-    real_0: center of screen
-    */
-
     float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
     float xStart = real_0 - (1.1 / zoom_factor);
-    // std::cout << xStart << "\n";
     float xEnd = real_0 + (1.1 / zoom_factor);
     float dx = (xEnd - xStart) / xSteps;
     
     float y;
     int ySteps = height;
-    float yStart = (imaginary_0 - (1.1 / zoom_factor) * (float(width) / float(height)));
-    float yEnd = (imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height)));
+    float yStart = imaginary_0 - (1.1 / zoom_factor) * (float(width) / float(height));
+    float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
     float dy = (yEnd - yStart) / ySteps;
 
     // std::cout << xStart << " " << xEnd << "\t" << yStart << " " << yEnd << "\n";
+    std::cout << yEnd << "\t" << yStart << "\t" << xEnd << "\t" << xStart << "\n";
     std::cout << "ratio" << (yEnd-yStart) / (xEnd-xStart) << "\n";
+    std::cout << width << height << "\n";
 
     int nIterations = 100;
 
@@ -238,7 +251,7 @@ int main(void)
         // std::cout << update_vertices << "\n";
 
         if (update_vertices) {
-        vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+            vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);

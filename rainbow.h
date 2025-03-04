@@ -1,6 +1,19 @@
 #include <algorithm>
 
 // Function written by Deepseek
+/**
+ * @brief
+ * 
+ * Calculate color of rainbow spectrum corresponding to ratio between <value> and <max_N>
+ * 
+ * @param value The number for which the color is calculated
+ * @param max_N The value for which white is returned
+ * @param r Where to store red value
+ * @param g Where to store green value
+ * @param b Where to store blue value
+ * 
+ * @return none
+*/
 void intToRainbowRGB(int value, int max_N, float& r, float& g, float& b) {
     if (value == max_N) {
 	r = 1.0f; g = 1.0f; b = 1.0f;
