@@ -121,10 +121,6 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
     float dy = (yEnd - yStart) / ySteps;
 
-    // std::cout << xStart << " " << xEnd << "\t" << yStart << " " << yEnd << "\n";
-    // std::cout << yEnd << "\t" << yStart << "\t" << xEnd << "\t" << xStart << "\n";
-    // std::cout << "ratio" << (yEnd-yStart) / (xEnd-xStart) << "\n";
-    // std::cout << width << height << "\n";
 
     int nIterations = 100;
 
@@ -163,6 +159,13 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     return vertices;
 }
 
+void populateVector(std::vector<float>& vec, float start, float delta)
+{
+    for (size_t j = 0; j < vec.size(); ++j) {
+        vec[j] = j*delta + start;
+    }
+}
+
 
 void updateVertices(std::vector<Vertex> &vertices, int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
@@ -187,13 +190,11 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
     int nIterations = 100;
 
     std::vector<float> xInput(xSteps);
-    for (size_t j = 0; j < xSteps; ++j) {
-            xInput[j] = j*dx + xStart;
-    }
+    populateVector(xInput, xStart, dx);
+
     std::vector<float> yInput(ySteps);
-    for (size_t j = 0; j < ySteps; ++j) {
-            yInput[j] = j*dy + yStart;
-    }
+    populateVector(yInput, yStart, dy);
+
     std::vector<float> r, g, b;
     createRGBVectors(nIterations, r, g, b);
 
