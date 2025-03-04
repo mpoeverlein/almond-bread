@@ -152,16 +152,13 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     calculatePlotValues(xPlotValues, xInput, xStart, xEnd, margin);
     float yPlotValue, xPlotValue;
 
-
     std::vector<Vertex> vertices(ySteps*xSteps);
-    for (size_t j = 0; j < yInput.size(); ++j) {
+    for (size_t j = 0; j < yInput.size(); j++) {
         y = yInput[j];
         yPlotValue = yPlotValues[j];
-        // float yPlotValue = (y-yStart)/(yEnd - yStart) * 2 * (1-margin) - (1-margin);
-        for (size_t i = 0; i < xInput.size(); ++i) {
+        for (size_t i = 0; i < xInput.size(); i++) {
             xPlotValue = xPlotValues[i];
             x = xInput[i];
-            // float xPlotValue = (x-xStart)/(xEnd - xStart) * 2 * (1-margin) - (1-margin);
             int myIterations = iterateMandelbrot(x, y, nIterations);
 
             Vertex current_vertex;
@@ -181,6 +178,7 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
 
 void updateVertices(std::vector<Vertex> &vertices, int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
+    std::cout << "vertices.size " << vertices.size() << "\n";
     float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
@@ -196,10 +194,8 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
 
     int nIterations = 100;
 
-    std::vector<float> xInput(xSteps);
+    std::vector<float> xInput(xSteps), yInput(ySteps);
     populateVector(xInput, xStart, dx);
-
-    std::vector<float> yInput(ySteps);
     populateVector(yInput, yStart, dy);
 
     std::vector<float> r, g, b;
@@ -210,18 +206,14 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
     calculatePlotValues(xPlotValues, xInput, xStart, xEnd, margin);
     float yPlotValue, xPlotValue;
 
-    //std::vector<Vertex> vertices(ySteps*xSteps);
-    for (size_t j = 0; j < yInput.size(); ++j) {
+    for (size_t j = 0; j < yInput.size(); j++) {
         y = yInput[j];
         yPlotValue = yPlotValues[j];
-        // float yPlotValue = (y-yStart)/(yEnd - yStart) * 2 * (1-margin) - (1-margin);
-        for (size_t i = 0; i < xInput.size(); ++i) {
+        for (size_t i = 0; i < xInput.size(); i++) {
             x = xInput[i];
             xPlotValue = xPlotValues[i];
-            // float xPlotValue = (x-xStart)/(xEnd - xStart) * 2 * (1-margin) - (1-margin);
             int myIterations = iterateMandelbrot(x, y, nIterations);
 
-            // std::cout << j*xSteps+i << "\t" << vertices.size() << "\n";
             Vertex& current_vertex = vertices[j*xSteps + i];
             current_vertex.true_position[0] = x;
             current_vertex.true_position[1] = y;
@@ -230,10 +222,8 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
             current_vertex.color[0] = r[myIterations];
             current_vertex.color[1] = g[myIterations];
             current_vertex.color[2] = b[myIterations]; 
-            // vertices[j*xSteps + i] = current_vertex;
         }
     }
-
 }
 
  
@@ -244,7 +234,6 @@ int main(void)
     float real_0 = -0.6;
     float imaginary_0 = 0.0f;
     float zoom_factor = 1.0f;
-    std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
      
     glfwSetErrorCallback(error_callback);
  
@@ -263,19 +252,18 @@ int main(void)
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
+    glfwGetWindowSize(window, &width, &height);
+    std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
  
     glfwSetKeyCallback(window, key_callback);
  
     glfwMakeContextCurrent(window);
     gladLoadGL();
     glfwSwapInterval(1);
- 
-    // NOTE: OpenGL error checks have been omitted for brevity
- 
+  
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    // std::vector<Vertex> vertices = createVisuals(1000, 1000);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
  
     const GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
@@ -307,15 +295,11 @@ int main(void)
  
     while (!glfwWindowShouldClose(window))
     {
-        // glfwGetFramebufferSize(window, &width, &height);
-        // const float ratio = width / (float) height;
-        // if (width * height != vertices.size()) {
-        //     std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
-        //     glGenBuffers(1, &vertex_buffer);
-        //     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-        //     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-        // }
-        // std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+        glfwGetWindowSize(window, &width, &height);
+        const float ratio = width / (float) height;
+        if (width * height != vertices.size()) {
+            vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+        }
 
         bool update_vertices = true;
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
@@ -334,17 +318,13 @@ int main(void)
             update_vertices = false;
         }
 
-        // std::cout << update_vertices << "\n";
-
         if (update_vertices) {
             updateVertices(vertices, width, height, real_0, imaginary_0, zoom_factor);
-            // vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
  
-        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
         glPointSize(10);
  
