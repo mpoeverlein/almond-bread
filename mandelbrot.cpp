@@ -85,6 +85,17 @@ std::vector<float> copyArray(std::vector<float>& arr)
     return arr;
 }
 
+void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>& g, std::vector<float>& b)
+{
+    float rr, gg, bb;
+    for (int i = 0; i <= nIterations; ++i) {
+        intToRainbowRGB(i, nIterations, rr, gg, bb);
+        r.push_back(rr);
+        g.push_back(gg);
+        b.push_back(bb);
+    }
+}
+
 /**
  * @brief
  * Calculate color values of all pixels in the window
@@ -111,9 +122,9 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     float dy = (yEnd - yStart) / ySteps;
 
     // std::cout << xStart << " " << xEnd << "\t" << yStart << " " << yEnd << "\n";
-    std::cout << yEnd << "\t" << yStart << "\t" << xEnd << "\t" << xStart << "\n";
-    std::cout << "ratio" << (yEnd-yStart) / (xEnd-xStart) << "\n";
-    std::cout << width << height << "\n";
+    // std::cout << yEnd << "\t" << yStart << "\t" << xEnd << "\t" << xStart << "\n";
+    // std::cout << "ratio" << (yEnd-yStart) / (xEnd-xStart) << "\n";
+    // std::cout << width << height << "\n";
 
     int nIterations = 100;
 
@@ -126,13 +137,7 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
             yInput[j] = j*dy + yStart;
     }
     std::vector<float> r, g, b;
-    for (int i = 0; i <= nIterations; ++i) {
-        float rr, gg, bb;
-        intToRainbowRGB(i, nIterations, rr, gg, bb);
-        r.push_back(rr);
-        g.push_back(gg);
-        b.push_back(bb);
-    }
+    createRGBVectors(nIterations, r, g, b);
 
     std::vector<Vertex> vertices(ySteps*xSteps);
     for (size_t j = 0; j < yInput.size(); ++j) {
@@ -156,6 +161,64 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     }
 
     return vertices;
+}
+
+
+void updateVertices(std::vector<Vertex> &vertices, int width, int height, float real_0, float imaginary_0, float zoom_factor)
+{
+    float margin = 0.0; // how much space between graph and edge of window
+    float x;
+    int xSteps = width;
+    float xStart = real_0 - (1.1 / zoom_factor);
+    float xEnd = real_0 + (1.1 / zoom_factor);
+    float dx = (xEnd - xStart) / xSteps;
+
+    float y;
+    int ySteps = height;
+    float yStart = imaginary_0 - (1.1 / zoom_factor) * (float(width) / float(height));
+    float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
+    float dy = (yEnd - yStart) / ySteps;
+
+    // std::cout << xStart << " " << xEnd << "\t" << yStart << " " << yEnd << "\n";
+    // std::cout << yEnd << "\t" << yStart << "\t" << xEnd << "\t" << xStart << "\n";
+    // std::cout << "ratio" << (yEnd-yStart) / (xEnd-xStart) << "\n";
+    // std::cout << width << height << "\n";
+
+    int nIterations = 100;
+
+    std::vector<float> xInput(xSteps);
+    for (size_t j = 0; j < xSteps; ++j) {
+            xInput[j] = j*dx + xStart;
+    }
+    std::vector<float> yInput(ySteps);
+    for (size_t j = 0; j < ySteps; ++j) {
+            yInput[j] = j*dy + yStart;
+    }
+    std::vector<float> r, g, b;
+    createRGBVectors(nIterations, r, g, b);
+
+    //std::vector<Vertex> vertices(ySteps*xSteps);
+    for (size_t j = 0; j < yInput.size(); ++j) {
+        y = yInput[j];
+        float yPlotValue = (y-yStart)/(yEnd - yStart) * 2 * (1-margin) - (1-margin);
+        for (size_t i = 0; i < xInput.size(); ++i) {
+            x = xInput[i];
+            float xPlotValue = (x-xStart)/(xEnd - xStart) * 2 * (1-margin) - (1-margin);
+            int myIterations = iterateMandelbrot(x, y, nIterations);
+
+            // std::cout << j*xSteps+i << "\t" << vertices.size() << "\n";
+            Vertex& current_vertex = vertices[j*xSteps + i];
+            current_vertex.true_position[0] = x;
+            current_vertex.true_position[1] = y;
+            current_vertex.position[0] = xPlotValue;
+            current_vertex.position[1] = yPlotValue;
+            current_vertex.color[0] = r[myIterations];
+            current_vertex.color[1] = g[myIterations];
+            current_vertex.color[2] = b[myIterations]; 
+            // vertices[j*xSteps + i] = current_vertex;
+        }
+    }
+
 }
 
  
@@ -229,8 +292,16 @@ int main(void)
  
     while (!glfwWindowShouldClose(window))
     {
-        glfwGetFramebufferSize(window, &width, &height);
-        const float ratio = width / (float) height;
+        // glfwGetFramebufferSize(window, &width, &height);
+        // const float ratio = width / (float) height;
+        // if (width * height != vertices.size()) {
+        //     std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+        //     glGenBuffers(1, &vertex_buffer);
+        //     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+        //     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+        // }
+        // std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+
         bool update_vertices = true;
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
             real_0 += 0.1f / zoom_factor;
@@ -251,7 +322,8 @@ int main(void)
         // std::cout << update_vertices << "\n";
 
         if (update_vertices) {
-            vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+            updateVertices(vertices, width, height, real_0, imaginary_0, zoom_factor);
+            // vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
