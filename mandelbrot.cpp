@@ -85,6 +85,21 @@ std::vector<float> copyArray(std::vector<float>& arr)
     return arr;
 }
 
+
+void populateVector(std::vector<float>& vec, float start, float delta)
+{
+    for (size_t j = 0; j < vec.size(); ++j) {
+        vec[j] = j*delta + start;
+    }
+}
+
+void calculatePlotValues(std::vector<float>& plotValues, std::vector<float>& input, float start, float end, float margin)
+{
+    for (size_t i = 0; i < plotValues.size(); ++i) {
+        plotValues[i] = (input[i]-start)/(end - start) * 2 * (1-margin) - (1-margin);
+    }
+}
+
 void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>& g, std::vector<float>& b)
 {
     float rr, gg, bb;
@@ -121,27 +136,32 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
     float dy = (yEnd - yStart) / ySteps;
 
-
     int nIterations = 100;
 
     std::vector<float> xInput(xSteps);
-    for (size_t j = 0; j < xSteps; ++j) {
-            xInput[j] = j*dx + xStart;
-    }
+    populateVector(xInput, xStart, dx);
+
     std::vector<float> yInput(ySteps);
-    for (size_t j = 0; j < ySteps; ++j) {
-            yInput[j] = j*dy + yStart;
-    }
+    populateVector(yInput, yStart, dy);
+
     std::vector<float> r, g, b;
     createRGBVectors(nIterations, r, g, b);
+
+    std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
+    calculatePlotValues(yPlotValues, yInput, yStart, yEnd, margin);
+    calculatePlotValues(xPlotValues, xInput, xStart, xEnd, margin);
+    float yPlotValue, xPlotValue;
+
 
     std::vector<Vertex> vertices(ySteps*xSteps);
     for (size_t j = 0; j < yInput.size(); ++j) {
         y = yInput[j];
-        float yPlotValue = (y-yStart)/(yEnd - yStart) * 2 * (1-margin) - (1-margin);
+        yPlotValue = yPlotValues[j];
+        // float yPlotValue = (y-yStart)/(yEnd - yStart) * 2 * (1-margin) - (1-margin);
         for (size_t i = 0; i < xInput.size(); ++i) {
+            xPlotValue = xPlotValues[i];
             x = xInput[i];
-            float xPlotValue = (x-xStart)/(xEnd - xStart) * 2 * (1-margin) - (1-margin);
+            // float xPlotValue = (x-xStart)/(xEnd - xStart) * 2 * (1-margin) - (1-margin);
             int myIterations = iterateMandelbrot(x, y, nIterations);
 
             Vertex current_vertex;
@@ -159,14 +179,6 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     return vertices;
 }
 
-void populateVector(std::vector<float>& vec, float start, float delta)
-{
-    for (size_t j = 0; j < vec.size(); ++j) {
-        vec[j] = j*delta + start;
-    }
-}
-
-
 void updateVertices(std::vector<Vertex> &vertices, int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
     float margin = 0.0; // how much space between graph and edge of window
@@ -182,11 +194,6 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
     float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
     float dy = (yEnd - yStart) / ySteps;
 
-    // std::cout << xStart << " " << xEnd << "\t" << yStart << " " << yEnd << "\n";
-    // std::cout << yEnd << "\t" << yStart << "\t" << xEnd << "\t" << xStart << "\n";
-    // std::cout << "ratio" << (yEnd-yStart) / (xEnd-xStart) << "\n";
-    // std::cout << width << height << "\n";
-
     int nIterations = 100;
 
     std::vector<float> xInput(xSteps);
@@ -198,13 +205,20 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
     std::vector<float> r, g, b;
     createRGBVectors(nIterations, r, g, b);
 
+    std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
+    calculatePlotValues(yPlotValues, yInput, yStart, yEnd, margin);
+    calculatePlotValues(xPlotValues, xInput, xStart, xEnd, margin);
+    float yPlotValue, xPlotValue;
+
     //std::vector<Vertex> vertices(ySteps*xSteps);
     for (size_t j = 0; j < yInput.size(); ++j) {
         y = yInput[j];
-        float yPlotValue = (y-yStart)/(yEnd - yStart) * 2 * (1-margin) - (1-margin);
+        yPlotValue = yPlotValues[j];
+        // float yPlotValue = (y-yStart)/(yEnd - yStart) * 2 * (1-margin) - (1-margin);
         for (size_t i = 0; i < xInput.size(); ++i) {
             x = xInput[i];
-            float xPlotValue = (x-xStart)/(xEnd - xStart) * 2 * (1-margin) - (1-margin);
+            xPlotValue = xPlotValues[i];
+            // float xPlotValue = (x-xStart)/(xEnd - xStart) * 2 * (1-margin) - (1-margin);
             int myIterations = iterateMandelbrot(x, y, nIterations);
 
             // std::cout << j*xSteps+i << "\t" << vertices.size() << "\n";
