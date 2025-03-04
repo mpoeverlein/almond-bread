@@ -8,15 +8,15 @@
  * 
  * @param value The number for which the color is calculated
  * @param max_N The value for which white is returned
- * @param r Where to store red value
- * @param g Where to store green value
- * @param b Where to store blue value
+ * @param rr Where to store red value
+ * @param gg Where to store green value
+ * @param bb Where to store blue value
  * 
  * @return none
 */
-void intToRainbowRGB(int value, int max_N, float& r, float& g, float& b) {
+void intToRainbowRGB(int value, int max_N, float& rr, float& gg, float& bb) {
     if (value == max_N) {
-	r = 1.0f; g = 1.0f; b = 1.0f;
+	rr = 1.0f; gg = 1.0f; bb = 1.0f;
 	return;
     }
     value = std::max(0, std::min(value, max_N));
@@ -31,39 +31,39 @@ void intToRainbowRGB(int value, int max_N, float& r, float& g, float& b) {
     // Interpolate between colors in each segment
     switch (segment) {
         case 0: // Red to Yellow
-            r = 1.0f;
-            g = segmentPosition;
-            b = 0.0f;
+            rr = 1.0f;
+            gg = segmentPosition;
+            bb = 0.0f;
             break;
         case 1: // Yellow to Green
-            r = 1.0f - segmentPosition;
-            g = 1.0f;
-            b = 0.0f;
+            rr = 1.0f - segmentPosition;
+            gg = 1.0f;
+            bb = 0.0f;
             break;
         case 2: // Green to Cyan
-            r = 0.0f;
-            g = 1.0f;
-            b = segmentPosition;
+            rr = 0.0f;
+            gg = 1.0f;
+            bb = segmentPosition;
             break;
         case 3: // Cyan to Blue
-            r = 0.0f;
-            g = 1.0f - segmentPosition;
-            b = 1.0f;
+            rr = 0.0f;
+            gg = 1.0f - segmentPosition;
+            bb = 1.0f;
             break;
         case 4: // Blue to Magenta
-            r = segmentPosition;
-            g = 0.0f;
-            b = 1.0f;
+            rr = segmentPosition;
+            gg = 0.0f;
+            bb = 1.0f;
             break;
         case 5: // Magenta to Red
-            r = 1.0f;
-            g = 0.0f;
-            b = 1.0f - segmentPosition;
+            rr = 1.0f;
+            gg = 0.0f;
+            bb = 1.0f - segmentPosition;
             break;
         default: // Should never happen
-            r = 0.0f;
-            g = 0.0f;
-            b = 0.0f;
+            rr = 0.0f;
+            gg = 0.0f;
+            bb = 0.0f;
             break;
     }
 }
