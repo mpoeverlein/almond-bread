@@ -104,11 +104,22 @@ void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>
     float rr, gg, bb;
     for (int i = 0; i <= nIterations; ++i) {
         intToRainbowRGB(i, nIterations, rr, gg, bb);
-        r.push_back(rr);
-        g.push_back(gg);
-        b.push_back(bb);
+        r[i] = rr; // r.push_back(rr);
+        g[i] = gg; //g.push_back(gg);
+        b[i] = bb; // b.push_back(bb);
     }
 }
+
+// template <typename Callable>
+// void createRGBVectors(int nIterations, 
+//     std::vector<float>& r, 
+//     std::vector<float>& g, 
+//     std::vector<float>& b,
+//     Callable colorFunction
+// )
+// {
+
+// }
 
 /**
  * @brief
@@ -143,7 +154,7 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     std::vector<float> yInput(ySteps);
     populateVector(yInput, yStart, dy);
 
-    std::vector<float> r, g, b;
+    std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
     createRGBVectors(nIterations, r, g, b);
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
@@ -197,7 +208,7 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
     populateVector(xInput, xStart, dx);
     populateVector(yInput, yStart, dy);
 
-    std::vector<float> r, g, b;
+    std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
     createRGBVectors(nIterations, r, g, b);
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
