@@ -13,7 +13,12 @@
 #include <iostream> 
 #include <algorithm> 
 
+// for any complex number with magnitude larger than 2 the iteration will not converge
 const float convergence_radius_squared = 4.0f;
+// after how many interations to stop. this is a global value for now, but maybe a local adaptivtiy is possible
+const int nIterations = 100;
+// how much space between graph and edge of window
+const float margin = 0.0; 
 
 typedef struct Vertex
 {
@@ -123,7 +128,7 @@ void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>
  */
 std::vector<Vertex> createVertices(int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
-    float margin = 0.0; // how much space between graph and edge of window
+    // float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
     float xStart = real_0 - (1.1 / zoom_factor);
@@ -179,7 +184,7 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
 void updateVertices(std::vector<Vertex> &vertices, int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
     std::cout << "vertices.size " << vertices.size() << "\n";
-    float margin = 0.0; // how much space between graph and edge of window
+    // float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
     float xStart = real_0 - (1.1 / zoom_factor);
@@ -192,7 +197,7 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height, float 
     float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
     float dy = (yEnd - yStart) / ySteps;
 
-    int nIterations = 100;
+    // int nIterations = 100;
 
     std::vector<float> xInput(xSteps), yInput(ySteps);
     populateVector(xInput, xStart, dx);
