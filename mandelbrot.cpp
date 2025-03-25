@@ -127,7 +127,7 @@ void createColorScaleVectors(int nIterations,
     std::vector<float>& r, 
     std::vector<float>& g, 
     std::vector<float>& b,
-    Callable colorFunction
+    std::function<void(int, int, float, float, float)> colorFunction
 )
 {
     float rr, gg, bb;
