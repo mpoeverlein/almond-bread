@@ -85,12 +85,6 @@ int iterateMandelbrot(float a, float b, int maxIterations)
 
 }
 
-std::vector<float> copyArray(std::vector<float>& arr)
-{
-    return arr;
-}
-
-
 void populateVector(std::vector<float>& vec, float start, float delta)
 {
     for (size_t j = 0; j < vec.size(); ++j) {
