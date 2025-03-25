@@ -19,6 +19,8 @@ const float convergence_radius_squared = 4.0f;
 const int nIterations = 100;
 // how much space between graph and edge of window
 const float margin = 0.0; 
+// this value describes the default view: from (-defaultBoundary - i defaultBoundary) to (defaultBoundary + i defaultBoundary)
+const float defaultBoundary = 1.1;
 
 
 typedef struct Vertex
@@ -117,26 +119,35 @@ void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>
     float rr, gg, bb;
     for (int i = 0; i <= nIterations; i++) {
         intToRainbowRGB(i, nIterations, rr, gg, bb);
-        r.push_back(rr);
-        g.push_back(gg);
-        b.push_back(bb);
+        r[i] = rr;
+        g[i] = gg;
+        b[i] = bb;
     }
 }
 
+template <typename Callable>
 void createColorScaleVectors(int nIterations, 
     std::vector<float>& r, 
     std::vector<float>& g, 
     std::vector<float>& b,
-    std::function<void(int, int, float, float, float)> colorFunction
+    // std::function<void(int, int, float, float, float)> colorFunction
+    Callable colorFunction
 )
 {
     float rr, gg, bb;
     for (int i = 0; i <= nIterations; i++) {
         colorFunction(i, nIterations, rr, gg, bb);
-        r.push_back(rr);
-        g.push_back(gg);
-        b.push_back(bb);
+        r[i] = rr;
+        g[i] = gg;
+        b[i] = bb;
     }
+}
+
+void determineDimensions(int nSteps, float base, float zoom_factor, float& start, float& end, float& delta)
+{
+    start = base - (defaultBoundary / zoom_factor);
+    end = base + (defaultBoundary / zoom_factor);
+    delta = (end - start) / nSteps;
 }
 
 /**
@@ -151,12 +162,12 @@ void createColorScaleVectors(int nIterations,
  */
 std::vector<Vertex> createVertices(int width, int height, float real_0, float imaginary_0, float zoom_factor)
 {
-    float margin = 0.0; // how much space between graph and edge of window
-    float x;
+    float x, xStart, xEnd, dx;
     int xSteps = width;
-    float xStart = real_0 - (1.1 / zoom_factor);
-    float xEnd = real_0 + (1.1 / zoom_factor);
-    float dx = (xEnd - xStart) / xSteps;
+    determineDimensions(xSteps, real_0, zoom_factor, xStart, xEnd, dx);
+    // float xStart = real_0 - (1.1 / zoom_factor);
+    // float xEnd = real_0 + (1.1 / zoom_factor);
+    // float dx = (xEnd - xStart) / xSteps;
     
     float y;
     int ySteps = height;
@@ -170,7 +181,8 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     std::vector<float> yInput(ySteps);
     populateVector(yInput, yStart, dy);
 
-    std::vector<float> r, g, b;
+    // RGB vectors are of predefined length
+    std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
     createRGBVectors(nIterations, r, g, b);
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
