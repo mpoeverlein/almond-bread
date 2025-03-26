@@ -116,17 +116,6 @@ void calculatePlotValues(std::vector<float>& plotValues, std::vector<float>& inp
     }
 }
 
-void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>& g, std::vector<float>& b)
-{
-    float rr, gg, bb;
-    for (int i = 0; i <= nIterations; ++i) {
-        intToRainbowRGB(i, nIterations, rr, gg, bb);
-        r[i] = rr; // r.push_back(rr);
-        g[i] = gg; //g.push_back(gg);
-        b[i] = bb; // b.push_back(bb);
-    }
-}
-
 template <typename Callable>
 void createRGBVectors(int nIterations, 
     std::vector<float>& r, 
@@ -138,9 +127,9 @@ void createRGBVectors(int nIterations,
     float rr, gg, bb;
     for (int i = 0; i <= nIterations; ++i) {
         colorFunction(i, nIterations, rr, gg, bb);
-        r[i] = rr; // r.push_back(rr);
-        g[i] = gg; //g.push_back(gg);
-        b[i] = bb; // b.push_back(bb);
+        r[i] = rr;
+        g[i] = gg;
+        b[i] = bb;
     }
 }
 
