@@ -17,15 +17,23 @@
 // for any complex number with magnitude larger than 2 the iteration will not converge
 const float convergence_radius_squared = 4.0f;
 // after how many interations to stop. this is a global value for now, but maybe a local adaptivtiy is possible
-const int nIterations = 100;
+const int nIterations = 500;
 // how much space between graph and edge of window
 const float margin = 0.0;
 // initial range from (boundary - i boundary) to (boundary + i boundary)
 const float boundary = 1.1;
 
-float real_0 = -0.6f;
-float imaginary_0 = 0.0f;
-float zoom_factor = 1.0f;
+// float real_0 = -0.6f;
+// float imaginary_0 = 0.0f;
+// float zoom_factor = 1.0f;
+
+// float real_0 = -1.21235;
+// float imaginary_0 = 0.318563;
+// float zoom_factor = 1/0.0190757;
+
+float real_0 = -1.21235;
+float imaginary_0 = 0.318989;
+float zoom_factor = 1/1.41981e-05;
 
 typedef struct Vertex
 {
@@ -161,6 +169,8 @@ std::vector<Vertex> createVertices(int width, int height)
 
     std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
     createRGBVectors(nIterations, r, g, b, intToRainbowRGB);
+    // createRGBVectors(nIterations, r, g, b, intToBWRGB);
+    
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
     calculatePlotValues(yPlotValues, yInput, dimensions.yStart, dimensions.yEnd, margin);

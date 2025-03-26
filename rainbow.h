@@ -1,5 +1,17 @@
 #include <algorithm>
 
+void intToBWRGB(int value, int max_N, float& rr, float& gg, float& bb) {
+    if (value == max_N) {
+        rr = 1.0f; gg = 1.0f; bb = 1.0f;
+        return;
+    }
+    value = std::max(0, std::min(value, max_N));
+    float normalized = static_cast<float>(value) / max_N;
+    rr = normalized;
+    gg = normalized;
+    bb = normalized;
+}
+
 // Function written by Deepseek
 /**
  * @brief
@@ -16,8 +28,8 @@
 */
 void intToRainbowRGB(int value, int max_N, float& rr, float& gg, float& bb) {
     if (value == max_N) {
-	rr = 1.0f; gg = 1.0f; bb = 1.0f;
-	return;
+        rr = 1.0f; gg = 1.0f; bb = 1.0f;
+        return;
     }
     value = std::max(0, std::min(value, max_N));
 
