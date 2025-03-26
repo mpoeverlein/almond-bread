@@ -18,7 +18,13 @@ const float convergence_radius_squared = 4.0f;
 // after how many interations to stop. this is a global value for now, but maybe a local adaptivtiy is possible
 const int nIterations = 100;
 // how much space between graph and edge of window
-const float margin = 0.0; 
+const float margin = 0.0;
+// initial range from (boundary - i boundary) to (boundary + i boundary)
+const float boundary = 1.1;
+
+float real_0 = -0.6f;
+float imaginary_0 = 0.0f;
+float zoom_factor = 1.0f;
 
 typedef struct Vertex
 {
@@ -26,6 +32,16 @@ typedef struct Vertex
     vec2 position;
     vec3 color;
 } Vertex;
+
+typedef struct SampleDimensions
+{
+    float xStart;
+    float xEnd;
+    float dx;
+    float yStart;
+    float yEnd;
+    float dy;
+} SampleDimensions;
 
 static const char* vertex_shader_text =
 "#version 330\n"
@@ -59,6 +75,18 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+SampleDimensions createDimensions(int xSteps, int ySteps)
+{
+    SampleDimensions s;
+    s.xStart = real_0 - (boundary / zoom_factor);
+    s.xEnd = real_0 + (boundary / zoom_factor);
+    s.dx = (s.xEnd - s.xStart) / xSteps;
+    
+    s.yStart = imaginary_0 - (boundary / zoom_factor);
+    s.yEnd = imaginary_0 + (boundary / zoom_factor);
+    s.dy = (s.yEnd - s.yStart) / ySteps;
+    return s;
+}
 /**
  * @brief
  * For a complex number c = a + bi, count how many iterations it takes
@@ -110,16 +138,29 @@ void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>
     }
 }
 
-// template <typename Callable>
-// void createRGBVectors(int nIterations, 
-//     std::vector<float>& r, 
-//     std::vector<float>& g, 
-//     std::vector<float>& b,
-//     Callable colorFunction
-// )
-// {
+template <typename Callable>
+void createRGBVectors(int nIterations, 
+    std::vector<float>& r, 
+    std::vector<float>& g, 
+    std::vector<float>& b,
+    Callable colorFunction
+)
+{
+    float rr, gg, bb;
+    for (int i = 0; i <= nIterations; ++i) {
+        colorFunction(i, nIterations, rr, gg, bb);
+        r[i] = rr; // r.push_back(rr);
+        g[i] = gg; //g.push_back(gg);
+        b[i] = bb; // b.push_back(bb);
+    }
+}
 
-// }
+void determineDimensions(int steps, float base, float margin, float zoom_factor, float& start, float& end, float& delta)
+{
+    start = base - (boundary / zoom_factor);
+    end = base + (boundary / zoom_factor);
+    delta = (end - start) / steps;
+}
 
 /**
  * @brief
@@ -131,35 +172,27 @@ void createRGBVectors(int nIterations, std::vector<float>& r, std::vector<float>
  * @param imaginary_0 imaginary value of window center
  * @param zoom_factor If 1, window width accounts for real value length of 2.2
  */
-std::vector<Vertex> createVertices(int width, int height, float real_0, float imaginary_0, float zoom_factor)
+std::vector<Vertex> createVertices(int width, int height)
 {
-    // float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
-    float xStart = real_0 - (1.1 / zoom_factor);
-    float xEnd = real_0 + (1.1 / zoom_factor);
-    float dx = (xEnd - xStart) / xSteps;
-    
     float y;
     int ySteps = height;
-    float yStart = imaginary_0 - (1.1 / zoom_factor) * (float(width) / float(height));
-    float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
-    float dy = (yEnd - yStart) / ySteps;
 
-    int nIterations = 100;
+    SampleDimensions dimensions = createDimensions(xSteps, ySteps);
 
     std::vector<float> xInput(xSteps);
-    populateVector(xInput, xStart, dx);
+    populateVector(xInput, dimensions.xStart, dimensions.dx);
 
     std::vector<float> yInput(ySteps);
-    populateVector(yInput, yStart, dy);
+    populateVector(yInput, dimensions.yStart, dimensions.dy);
 
     std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
-    createRGBVectors(nIterations, r, g, b);
+    createRGBVectors(nIterations, r, g, b, intToRainbowRGB);
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
-    calculatePlotValues(yPlotValues, yInput, yStart, yEnd, margin);
-    calculatePlotValues(xPlotValues, xInput, xStart, xEnd, margin);
+    calculatePlotValues(yPlotValues, yInput, dimensions.yStart, dimensions.yEnd, margin);
+    calculatePlotValues(xPlotValues, xInput, dimensions.xStart, dimensions.xEnd, margin);
     float yPlotValue, xPlotValue;
 
     std::vector<Vertex> vertices(ySteps*xSteps);
@@ -186,34 +219,27 @@ std::vector<Vertex> createVertices(int width, int height, float real_0, float im
     return vertices;
 }
 
-void updateVertices(std::vector<Vertex> &vertices, int width, int height, float real_0, float imaginary_0, float zoom_factor)
+void updateVertices(std::vector<Vertex> &vertices, int width, int height)
 {
     std::cout << "vertices.size " << vertices.size() << "\n";
     // float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
-    float xStart = real_0 - (1.1 / zoom_factor);
-    float xEnd = real_0 + (1.1 / zoom_factor);
-    float dx = (xEnd - xStart) / xSteps;
 
     float y;
     int ySteps = height;
-    float yStart = imaginary_0 - (1.1 / zoom_factor) * (float(width) / float(height));
-    float yEnd = imaginary_0 + (1.1 / zoom_factor) * (float(width) / float(height));
-    float dy = (yEnd - yStart) / ySteps;
-
-    // int nIterations = 100;
+    SampleDimensions dimensions = createDimensions(xSteps, ySteps);
 
     std::vector<float> xInput(xSteps), yInput(ySteps);
-    populateVector(xInput, xStart, dx);
-    populateVector(yInput, yStart, dy);
+    populateVector(xInput, dimensions.xStart, dimensions.dx);
+    populateVector(yInput, dimensions.yStart, dimensions.dy);
 
     std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
-    createRGBVectors(nIterations, r, g, b);
+    createRGBVectors(nIterations, r, g, b, intToRainbowRGB);
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
-    calculatePlotValues(yPlotValues, yInput, yStart, yEnd, margin);
-    calculatePlotValues(xPlotValues, xInput, xStart, xEnd, margin);
+    calculatePlotValues(yPlotValues, yInput, dimensions.yStart, dimensions.yEnd, margin);
+    calculatePlotValues(xPlotValues, xInput, dimensions.xStart, dimensions.xEnd, margin);
     float yPlotValue, xPlotValue;
 
     for (size_t j = 0; j < yInput.size(); j++) {
@@ -241,9 +267,6 @@ int main(void)
 {
     int width = 1000;
     int height = 1000;
-    float real_0 = -0.6;
-    float imaginary_0 = 0.0f;
-    float zoom_factor = 1.0f;
      
     glfwSetErrorCallback(error_callback);
  
@@ -263,7 +286,7 @@ int main(void)
         exit(EXIT_FAILURE);
     }
     glfwGetWindowSize(window, &width, &height);
-    std::vector<Vertex> vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+    std::vector<Vertex> vertices = createVertices(width, height);
  
     glfwSetKeyCallback(window, key_callback);
  
@@ -308,7 +331,7 @@ int main(void)
         glfwGetWindowSize(window, &width, &height);
         const float ratio = width / (float) height;
         if (width * height != vertices.size()) {
-            vertices = createVertices(width, height, real_0, imaginary_0, zoom_factor);
+            vertices = createVertices(width, height);
         }
 
         bool update_vertices = true;
@@ -329,7 +352,8 @@ int main(void)
         }
 
         if (update_vertices) {
-            updateVertices(vertices, width, height, real_0, imaginary_0, zoom_factor);
+            std::cout << real_0 << " " << imaginary_0 << " " << boundary/zoom_factor << "\n";
+            updateVertices(vertices, width, height);
         }
 
         glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
