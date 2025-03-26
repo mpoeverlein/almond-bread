@@ -43,6 +43,7 @@ typedef struct SampleDimensions
     float dy;
 } SampleDimensions;
 
+// TODO: read shaders from file
 static const char* vertex_shader_text =
 "#version 330\n"
 "uniform mat4 MVP;\n"
@@ -155,13 +156,6 @@ void createRGBVectors(int nIterations,
     }
 }
 
-void determineDimensions(int steps, float base, float margin, float zoom_factor, float& start, float& end, float& delta)
-{
-    start = base - (boundary / zoom_factor);
-    end = base + (boundary / zoom_factor);
-    delta = (end - start) / steps;
-}
-
 /**
  * @brief
  * Calculate color values of all pixels in the window
@@ -181,10 +175,8 @@ std::vector<Vertex> createVertices(int width, int height)
 
     SampleDimensions dimensions = createDimensions(xSteps, ySteps);
 
-    std::vector<float> xInput(xSteps);
+    std::vector<float> xInput(xSteps), yInput(ySteps);
     populateVector(xInput, dimensions.xStart, dimensions.dx);
-
-    std::vector<float> yInput(ySteps);
     populateVector(yInput, dimensions.yStart, dimensions.dy);
 
     std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
@@ -221,8 +213,6 @@ std::vector<Vertex> createVertices(int width, int height)
 
 void updateVertices(std::vector<Vertex> &vertices, int width, int height)
 {
-    std::cout << "vertices.size " << vertices.size() << "\n";
-    // float margin = 0.0; // how much space between graph and edge of window
     float x;
     int xSteps = width;
 
