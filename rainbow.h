@@ -7,6 +7,11 @@ void intToBWRGB(int value, int max_N, float& rr, float& gg, float& bb) {
     }
     value = std::max(0, std::min(value, max_N));
     float normalized = static_cast<float>(value) / max_N;
+    if (normalized < 0.1) {
+        normalized = 0.0f;
+    } else {
+        normalized = 1.0f;
+    }
     rr = normalized;
     gg = normalized;
     bb = normalized;
