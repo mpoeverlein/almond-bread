@@ -119,7 +119,7 @@ int iterateMandelbrot(float a, float b, int maxRepetitions)
 
 }
 
-void makeMandelbrot(unsigned char* textureData, int nx, int ny, SampleDimensions sd) {
+void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRatio, SampleDimensions sd) {
     std::vector<float> r, g, b;
     for (int i = 0; i <= MAX_REPS; ++i) {
         float rr, gg, bb;
@@ -128,7 +128,6 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny, SampleDimensions
         g.push_back(gg*256);
         b.push_back(bb*256);
     }
-    float aspectRatio = (float) nx / ny;
     float xStart = sd.xCenter - sd.zoomFactor / 2;
     float yStart = sd.yCenter - sd.zoomFactor / 2 / aspectRatio;
     float dx = sd.zoomFactor;
@@ -149,6 +148,7 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny, SampleDimensions
 int main() {
     int width = 800;
     int height = 600;
+    float aspectRatio = (float) width / height;
     SampleDimensions sd;
     sd.xCenter = 0;
     sd.yCenter = 0;
@@ -236,7 +236,7 @@ int main() {
 
     // Generate some texture data
     unsigned char* textureData = new unsigned char[texWidth * texHeight * 3];
-    makeMandelbrot(textureData, texWidth, texHeight, sd);
+    makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd);
 
 
     // Update entire texture
@@ -249,19 +249,22 @@ int main() {
 
     // Main render loop
     while (!glfwWindowShouldClose(window)) {
+        glfwGetWindowSize(window, &width, &height);
+        const float aspectRatio = width / (float) height;
+        
         bool update_vertices = true;
         if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            sd.xCenter += 0.1f / sd.zoomFactor;
+            sd.xCenter += 0.1f * sd.zoomFactor;
         } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            sd.xCenter -= 0.1f / sd.zoomFactor;
+            sd.xCenter -= 0.1f * sd.zoomFactor;
         } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-            sd.yCenter += 0.1f / sd.zoomFactor;
+            sd.yCenter += 0.1f * sd.zoomFactor;
         } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            sd.yCenter -= 0.1f / sd.zoomFactor;
+            sd.yCenter -= 0.1f * sd.zoomFactor;
         } else if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) {
-            sd.zoomFactor *= 1.5f;
-        } else if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
             sd.zoomFactor /= 1.5f;
+        } else if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
+            sd.zoomFactor *= 1.5f;
         } else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
             sd = default_sd;
         } else {
@@ -269,12 +272,7 @@ int main() {
         }
 
         if (update_vertices) {
-            // std::cout << real_0 << " " << imaginary_0 << " " << zoom_factor << "\n";
-            // std::cout << vertices.size() << "\n";
-            // std::cout << vertices[0].position[0] << " " << vertices[0].position[1] << "\n";
-            // std::cout << vertices[vertices.size()-1].position[0] << " " << vertices[vertices.size()-1].position[1] << "\n";
-            // updateVertices(vertices, width, height);
-            makeMandelbrot(textureData, texWidth, texHeight, sd);
+            makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, textureData);
         }
 
