@@ -19,6 +19,13 @@
 const float convergence_radius_squared = 4.0f;
 const int MAX_REPS = 100;
 
+typedef struct SampleDimensions
+{
+    float xStart;
+    float xEnd;
+    float yStart;
+    float yEnd;
+} SampleDimensions;
 
 // Vertex shader source
 const char* vertexShaderSource = R"glsl(
@@ -104,7 +111,7 @@ int iterateMandelbrot(float a, float b, int maxRepetitions)
 
 }
 
-void makeMandelbrot(unsigned char* textureData, int nx, int ny) {
+void makeMandelbrot(unsigned char* textureData, int nx, int ny, SampleDimensions sd ) {
     std::vector<float> r, g, b;
     for (int i = 0; i <= MAX_REPS; ++i) {
         float rr, gg, bb;
@@ -113,10 +120,12 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny) {
         g.push_back(gg*256);
         b.push_back(bb*256);
     }
+    float dx = sd.xEnd - sd.xStart;
+    float dy = sd.yEnd - sd.yStart; 
     for (int y = 0; y < ny; y++) {
-        float imag_0 = (float) y / 512;
+        float imag_0 = sd.yStart + (float) y / ny * dy;
         for (int x = 0; x < nx; x++) {
-            float real_0 = (float) x / 512;
+            float real_0 = sd.xStart + (float) x / nx * dx;
             int nReps = iterateMandelbrot(real_0, imag_0, MAX_REPS);
             textureData[(y * nx + x) * 3 + 0] = r[nReps];
             textureData[(y * nx + x) * 3 + 1] = g[nReps];
@@ -129,6 +138,11 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny) {
 int main() {
     int width = 800;
     int height = 600;
+    SampleDimensions sd;
+    sd.xStart = -1.f;
+    sd.xEnd = 1.f;
+    sd.yStart = -1.f;
+    sd.yEnd = 1.f;
     // Initialize GLFW
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -211,7 +225,7 @@ int main() {
 
     // Generate some texture data
     unsigned char* textureData = new unsigned char[texWidth * texHeight * 3];
-    makeMandelbrot(textureData, texWidth, texHeight);
+    makeMandelbrot(textureData, texWidth, texHeight, sd);
 
 
     // Update entire texture
