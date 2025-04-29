@@ -21,10 +21,9 @@ const int MAX_REPS = 100;
 
 typedef struct SampleDimensions
 {
-    float xStart;
-    float xEnd;
-    float yStart;
-    float yEnd;
+    float xCenter;
+    float yCenter;
+    float zoomFactor;
 } SampleDimensions;
 
 // Vertex shader source
@@ -94,6 +93,15 @@ unsigned int createShaderProgram(const char* vertexShader, const char* fragmentS
     return program;
 }
 
+/**
+ * @brief
+ * For a complex number c = a + bi, count how many iterations it takes
+ * until the magnitude of z_n = z^2_n-1 + c is larger than 2.
+ * 
+ * @param a real value of input complex number
+ * @param b imaginary value of input complex number
+ * @param maxIterations after how many interations to stop
+ */
 int iterateMandelbrot(float a, float b, int maxRepetitions)
 {
     float tmp_a = a;
@@ -111,7 +119,7 @@ int iterateMandelbrot(float a, float b, int maxRepetitions)
 
 }
 
-void makeMandelbrot(unsigned char* textureData, int nx, int ny, SampleDimensions sd ) {
+void makeMandelbrot(unsigned char* textureData, int nx, int ny, SampleDimensions sd) {
     std::vector<float> r, g, b;
     for (int i = 0; i <= MAX_REPS; ++i) {
         float rr, gg, bb;
@@ -120,12 +128,15 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny, SampleDimensions
         g.push_back(gg*256);
         b.push_back(bb*256);
     }
-    float dx = sd.xEnd - sd.xStart;
-    float dy = sd.yEnd - sd.yStart; 
+    float aspectRatio = (float) nx / ny;
+    float xStart = sd.xCenter - sd.zoomFactor / 2;
+    float yStart = sd.yCenter - sd.zoomFactor / 2 / aspectRatio;
+    float dx = sd.zoomFactor;
+    float dy = sd.zoomFactor / aspectRatio;
     for (int y = 0; y < ny; y++) {
-        float imag_0 = sd.yStart + (float) y / ny * dy;
+        float imag_0 = yStart + (float) y / ny * dy;
         for (int x = 0; x < nx; x++) {
-            float real_0 = sd.xStart + (float) x / nx * dx;
+            float real_0 = xStart + (float) x / nx * dx;
             int nReps = iterateMandelbrot(real_0, imag_0, MAX_REPS);
             textureData[(y * nx + x) * 3 + 0] = r[nReps];
             textureData[(y * nx + x) * 3 + 1] = g[nReps];
@@ -139,10 +150,10 @@ int main() {
     int width = 800;
     int height = 600;
     SampleDimensions sd;
-    sd.xStart = -1.f;
-    sd.xEnd = 1.f;
-    sd.yStart = -1.f;
-    sd.yEnd = 1.f;
+    sd.xCenter = 0;
+    sd.yCenter = 0;
+    sd.zoomFactor = 1.f;
+    SampleDimensions default_sd = sd;
     // Initialize GLFW
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -238,6 +249,36 @@ int main() {
 
     // Main render loop
     while (!glfwWindowShouldClose(window)) {
+        bool update_vertices = true;
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+            sd.xCenter += 0.1f / sd.zoomFactor;
+        } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            sd.xCenter -= 0.1f / sd.zoomFactor;
+        } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            sd.yCenter += 0.1f / sd.zoomFactor;
+        } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+            sd.yCenter -= 0.1f / sd.zoomFactor;
+        } else if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) {
+            sd.zoomFactor *= 1.5f;
+        } else if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
+            sd.zoomFactor /= 1.5f;
+        } else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+            sd = default_sd;
+        } else {
+            update_vertices = false;
+        }
+
+        if (update_vertices) {
+            // std::cout << real_0 << " " << imaginary_0 << " " << zoom_factor << "\n";
+            // std::cout << vertices.size() << "\n";
+            // std::cout << vertices[0].position[0] << " " << vertices[0].position[1] << "\n";
+            // std::cout << vertices[vertices.size()-1].position[0] << " " << vertices[vertices.size()-1].position[1] << "\n";
+            // updateVertices(vertices, width, height);
+            makeMandelbrot(textureData, texWidth, texHeight, sd);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, textureData);
+        }
+
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -263,7 +304,6 @@ int main() {
 
     // Cleanup
     delete[] textureData;
-    // delete[] subTextureData;
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
