@@ -17,7 +17,7 @@
 #include <algorithm>
 
 const float convergence_radius_squared = 4.0f;
-const int MAX_REPS = 100;
+// const int MAX_REPS = 100;
 
 typedef struct SampleDimensions
 {
@@ -119,11 +119,11 @@ int iterateMandelbrot(float a, float b, int maxRepetitions)
 
 }
 
-void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRatio, SampleDimensions sd) {
+void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRatio, SampleDimensions sd, int maxRepetitions) {
     std::vector<float> r, g, b;
-    for (int i = 0; i <= MAX_REPS; ++i) {
+    for (int i = 0; i <= maxRepetitions; ++i) {
         float rr, gg, bb;
-        intToRainbowRGB(i, MAX_REPS, rr, gg, bb);
+        intToRainbowRGB(i, maxRepetitions, rr, gg, bb);
         r.push_back(rr*256);
         g.push_back(gg*256);
         b.push_back(bb*256);
@@ -136,7 +136,7 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRati
         float imag_0 = yStart + (float) y / ny * dy;
         for (int x = 0; x < nx; x++) {
             float real_0 = xStart + (float) x / nx * dx;
-            int nReps = iterateMandelbrot(real_0, imag_0, MAX_REPS);
+            int nReps = iterateMandelbrot(real_0, imag_0, maxRepetitions);
             textureData[(y * nx + x) * 3 + 0] = r[nReps];
             textureData[(y * nx + x) * 3 + 1] = g[nReps];
             textureData[(y * nx + x) * 3 + 2] = b[nReps];
@@ -146,6 +146,8 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRati
 
 
 int main() {
+    int maxRepetitions = 10;
+    int defaultMaxRepetitions = maxRepetitions;
     int width = 800;
     int height = 600;
     float aspectRatio = (float) width / height;
@@ -236,7 +238,7 @@ int main() {
 
     // Generate some texture data
     unsigned char* textureData = new unsigned char[texWidth * texHeight * 3];
-    makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd);
+    makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd, maxRepetitions);
 
 
     // Update entire texture
@@ -265,14 +267,19 @@ int main() {
             sd.zoomFactor /= 1.5f;
         } else if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
             sd.zoomFactor *= 1.5f;
+        } else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
+            maxRepetitions += 10;
+        } else if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
+            maxRepetitions = std::max(10, maxRepetitions/10);
         } else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
             sd = default_sd;
+            maxRepetitions = defaultMaxRepetitions;
         } else {
             update_vertices = false;
         }
 
         if (update_vertices) {
-            makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd);
+            makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd, maxRepetitions);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, textureData);
         }
 
