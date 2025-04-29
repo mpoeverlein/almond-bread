@@ -47,9 +47,11 @@ const char* fragmentShaderSource = R"glsl(
     in vec2 TexCoord;
     out vec4 FragColor;
     uniform sampler2D texture1;
+    uniform vec3 color = vec3(1.0, 0.0, 0.0);
     void main()
     {
-        FragColor = texture(texture1, TexCoord);
+        float grayscale = texture(texture1, TexCoord).r;
+        FragColor = vec4(grayscale * color, 1.0);
     }
 )glsl";
 
@@ -137,9 +139,10 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRati
         for (int x = 0; x < nx; x++) {
             float real_0 = xStart + (float) x / nx * dx;
             int nReps = iterateMandelbrot(real_0, imag_0, maxRepetitions);
-            textureData[(y * nx + x) * 3 + 0] = r[nReps];
-            textureData[(y * nx + x) * 3 + 1] = g[nReps];
-            textureData[(y * nx + x) * 3 + 2] = b[nReps];
+            textureData[(y * nx + x) * 3] = (float) nReps / maxRepetitions * 256;
+            // textureData[(y * nx + x) * 3 + 0] = r[nReps];
+            // textureData[(y * nx + x) * 3 + 1] = g[nReps];
+            // textureData[(y * nx + x) * 3 + 2] = b[nReps];
         }
     }
 }
@@ -228,7 +231,7 @@ int main() {
     // Allocate texture storage
     const int texWidth = width;
     const int texHeight = height;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth, texHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, texWidth, texHeight, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
 
     // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -280,6 +283,7 @@ int main() {
 
         if (update_vertices) {
             makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd, maxRepetitions);
+            std::cout << "ZOOM FACTOR " << sd.zoomFactor << "\n";
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, textureData);
         }
 
