@@ -3,20 +3,17 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <iostream>
-
-#include "linmath.h"
-// #include "rainbow.h"
- 
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <vector>
 #include <iostream> 
 #include <algorithm>
-
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "linmath.h" 
+
 
 std::string loadShaderFile(const char* filePath) {
     std::ifstream file;
@@ -34,12 +31,12 @@ std::string loadShaderFile(const char* filePath) {
 }
 
 
-typedef struct SampleDimensions
-{
-    float xCenter;
-    float yCenter;
-    float zoomFactor;
-} SampleDimensions;
+// typedef struct SampleDimensions
+// {
+//     float xCenter;
+//     float yCenter;
+//     float zoomFactor;
+// } SampleDimensions;
 
 unsigned int compileShader(unsigned int type, const char* source) {
     unsigned int id = glCreateShader(type);
@@ -77,19 +74,49 @@ unsigned int createShaderProgram(unsigned int vs, unsigned int fs) {
     return program;
 }
 
+int maxRepetitions = 10;
+int defaultMaxRepetitions = maxRepetitions;
+int width = 800;
+int height = 600;
+float aspectRatio = (float) width / height;
+float xCenter = 0;
+float yCenter = 0;
+float zoomFactor = 1.f;
+float defaultXCenter = xCenter;
+float defaultYCenter = yCenter;
+float defaultZoomFactor = zoomFactor;
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        float moveSpeed = 0.1f * zoomFactor; // Slower pan when zoomed in
+        switch (key) {
+            case GLFW_KEY_W: yCenter += moveSpeed; break;
+            case GLFW_KEY_S: yCenter -= moveSpeed; break;
+            case GLFW_KEY_A: xCenter -= moveSpeed; break;
+            case GLFW_KEY_D: xCenter += moveSpeed; break;
+            case GLFW_KEY_Q: zoomFactor *= 1.1f; break; // Zoom in
+            case GLFW_KEY_E: zoomFactor /= 1.1f; break; // Zoom out
+            case GLFW_KEY_M: maxRepetitions += 10; break;
+            case GLFW_KEY_N: maxRepetitions = std::max(10,maxRepetitions-10); break;
+            case GLFW_KEY_UP: yCenter += moveSpeed; break;
+            case GLFW_KEY_DOWN: yCenter -= moveSpeed; break;
+            case GLFW_KEY_LEFT: xCenter -= moveSpeed; break;
+            case GLFW_KEY_RIGHT: xCenter += moveSpeed; break;
+            case GLFW_KEY_COMMA: zoomFactor *= 1.1f; break; // Zoom in
+            case GLFW_KEY_PERIOD: zoomFactor /= 1.1f; break; // Zoom out
+            case GLFW_KEY_R: zoomFactor = defaultZoomFactor; xCenter = defaultXCenter; yCenter = defaultYCenter; maxRepetitions = defaultMaxRepetitions; break;
+        }
+    }
+}
+
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
+    zoomFactor *= (yoffset > 0) ? 1.1f : 0.9f;
+}
+
 
 int main() {
-    int maxRepetitions = 10;
-    int defaultMaxRepetitions = maxRepetitions;
-    int width = 800;
-    int height = 600;
-    float aspectRatio = (float) width / height;
-    SampleDimensions sd;
-    sd.xCenter = 0;
-    sd.yCenter = 0;
-    sd.zoomFactor = 1.f;
 
-    SampleDimensions default_sd = sd;
+
     // Initialize GLFW
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -109,6 +136,8 @@ int main() {
         return -1;
     }
     glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, keyCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     // Initialize GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -191,37 +220,11 @@ int main() {
     while (!glfwWindowShouldClose(window)) {
         glfwGetWindowSize(window, &width, &height);
         const float aspectRatio = width / (float) height;
-        
-        bool update_vertices = true;
-        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-            sd.xCenter += 0.1f * sd.zoomFactor;
-        } else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-            sd.xCenter -= 0.1f * sd.zoomFactor;
-        } else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-            sd.yCenter += 0.1f * sd.zoomFactor;
-        } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-            sd.yCenter -= 0.1f * sd.zoomFactor;
-        } else if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS) {
-            sd.zoomFactor /= 1.5f;
-        } else if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS) {
-            sd.zoomFactor *= 1.5f;
-        } else if (glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS) {
-            maxRepetitions += 10;
-        } else if (glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS) {
-            maxRepetitions = std::max(10, maxRepetitions/10);
-        } else if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-            sd = default_sd;
-            maxRepetitions = defaultMaxRepetitions;
-        } else {
-            update_vertices = false;
-        }
 
-        if (update_vertices) {
-            glUniform1f(zoomLoc, sd.zoomFactor);
-            glUniform2f(panLoc, sd.xCenter, sd.yCenter);
-            glUniform1i(nRepsLoc, maxRepetitions);
-            std::cout << "ZOOM FACTOR " << sd.zoomFactor << "X" << sd.xCenter << "Y" << sd.yCenter << "\n";
-        }
+        glUniform1f(zoomLoc, zoomFactor);
+        glUniform2f(panLoc, xCenter, yCenter);
+        glUniform1i(nRepsLoc, maxRepetitions);
+        std::cout << "ZOOM FACTOR " << zoomFactor << "X" << xCenter << "Y" << yCenter << "\n";
 
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
