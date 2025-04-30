@@ -2,8 +2,6 @@
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-// #include <glm/glm.hpp>
-// #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
 #include "linmath.h"
@@ -41,17 +39,39 @@ const char* vertexShaderSource = R"glsl(
     }
 )glsl";
 
+// // Fragment shader source
+// const char* fragmentShaderSource = R"glsl(
+//     #version 330 core
+//     in vec2 TexCoord;
+//     out vec4 FragColor;
+//     uniform sampler2D texture1;
+//     uniform vec3 color = vec3(1.0, 0.0, 0.0);
+//     void main()
+//     {
+//         float grayscale = texture(texture1, TexCoord).r;
+//         FragColor = vec4(grayscale * color, 1.0);
+//     }
+// )glsl";
+
 // Fragment shader source
 const char* fragmentShaderSource = R"glsl(
     #version 330 core
     in vec2 TexCoord;
     out vec4 FragColor;
-    uniform sampler2D texture1;
-    uniform vec3 color = vec3(1.0, 0.0, 0.0);
+    uniform float zoom = 1.0;     // Zoom factor
+    uniform vec2 offset = vec2(0.0); // Pan offset
+    vec3 hsv2rgb(float h, float s, float v) {
+        vec3 c = vec3(h, s, v);
+        vec3 rgb = clamp(abs(mod(c.x*6.0 + vec3(0.0,4.0,2.0), 6.0)-3.0)-1.0, 0.0, 1.0);
+        return v * mix(vec3(1.0), rgb, c.y);
+    }
+
     void main()
     {
-        float grayscale = texture(texture1, TexCoord).r;
-        FragColor = vec4(grayscale * color, 1.0);
+        vec2 uv = TexCoord * zoom + offset;
+        float checker = mod(floor(uv.x * 10.0) + floor(uv.y * 10.0), 2.0);
+        vec3 color = vec3(checker);
+        FragColor = vec4(color, 1.0);
     }
 )glsl";
 
@@ -139,10 +159,7 @@ void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRati
         for (int x = 0; x < nx; x++) {
             float real_0 = xStart + (float) x / nx * dx;
             int nReps = iterateMandelbrot(real_0, imag_0, maxRepetitions);
-            textureData[(y * nx + x) * 3] = (float) nReps / maxRepetitions * 256;
-            // textureData[(y * nx + x) * 3 + 0] = r[nReps];
-            // textureData[(y * nx + x) * 3 + 1] = g[nReps];
-            // textureData[(y * nx + x) * 3 + 2] = b[nReps];
+            textureData[(y * nx + x) * 3] = (float) nReps / maxRepetitions * 255;
         }
     }
 }
@@ -158,6 +175,9 @@ int main() {
     sd.xCenter = 0;
     sd.yCenter = 0;
     sd.zoomFactor = 1.f;
+
+
+
     SampleDimensions default_sd = sd;
     // Initialize GLFW
     if (!glfwInit()) {
@@ -187,6 +207,10 @@ int main() {
 
     // Create shader program
     unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+
+    GLint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
+    GLint panLoc = glGetUniformLocation(shaderProgram, "offset");
+
 
     // Set up vertex data and buffers
     float vertices[] = {
@@ -282,8 +306,10 @@ int main() {
         }
 
         if (update_vertices) {
+            glUniform1f(zoomLoc, sd.zoomFactor);
+            glUniform2f(panLoc, sd.xCenter, sd.yCenter);
             makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd, maxRepetitions);
-            std::cout << "ZOOM FACTOR " << sd.zoomFactor << "\n";
+            std::cout << "ZOOM FACTOR " << sd.zoomFactor << "X" << sd.xCenter << "Y" << sd.yCenter << "\n";
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, textureData);
         }
 
