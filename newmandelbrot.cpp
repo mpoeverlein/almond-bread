@@ -14,6 +14,26 @@
 #include <iostream> 
 #include <algorithm>
 
+#include <fstream>
+#include <sstream>
+#include <string>
+
+std::string loadShaderFile(const char* filePath) {
+    std::ifstream file;
+    std::stringstream buffer;
+    
+    file.open(filePath);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open shader file: " << filePath << std::endl;
+        return "";
+    }
+    
+    buffer << file.rdbuf();
+    file.close();
+    return buffer.str();
+}
+
+
 const float convergence_radius_squared = 4.0f;
 // const int MAX_REPS = 100;
 
@@ -24,58 +44,6 @@ typedef struct SampleDimensions
     float zoomFactor;
 } SampleDimensions;
 
-// Vertex shader source
-const char* vertexShaderSource = R"glsl(
-    #version 330 core
-    layout (location = 0) in vec2 aPos;
-    layout (location = 1) in vec2 aTexCoord;
-    out vec2 TexCoord;
-    uniform mat4 projection;
-    uniform mat4 model;
-    void main()
-    {
-        TexCoord = aTexCoord;
-        gl_Position = projection * model * vec4(aPos, 0.0, 1.0);
-    }
-)glsl";
-
-// // Fragment shader source
-// const char* fragmentShaderSource = R"glsl(
-//     #version 330 core
-//     in vec2 TexCoord;
-//     out vec4 FragColor;
-//     uniform sampler2D texture1;
-//     uniform vec3 color = vec3(1.0, 0.0, 0.0);
-//     void main()
-//     {
-//         float grayscale = texture(texture1, TexCoord).r;
-//         FragColor = vec4(grayscale * color, 1.0);
-//     }
-// )glsl";
-
-// Fragment shader source
-const char* fragmentShaderSource = R"glsl(
-    #version 330 core
-    in vec2 TexCoord;
-    out vec4 FragColor;
-    uniform float zoom = 1.0;     // Zoom factor
-    uniform vec2 offset = vec2(0.0); // Pan offset
-    vec3 hsv2rgb(float h, float s, float v) {
-        vec3 c = vec3(h, s, v);
-        vec3 rgb = clamp(abs(mod(c.x*6.0 + vec3(0.0,4.0,2.0), 6.0)-3.0)-1.0, 0.0, 1.0);
-        return v * mix(vec3(1.0), rgb, c.y);
-    }
-
-    void main()
-    {
-        vec2 uv = TexCoord * zoom + offset;
-        float checker = mod(floor(uv.x * 10.0) + floor(uv.y * 10.0), 2.0);
-        vec3 color = vec3(checker);
-        FragColor = vec4(color, 1.0);
-    }
-)glsl";
-
-// Function to compile shaders
 unsigned int compileShader(unsigned int type, const char* source) {
     unsigned int id = glCreateShader(type);
     glShaderSource(id, 1, &source, nullptr);
@@ -91,11 +59,11 @@ unsigned int compileShader(unsigned int type, const char* source) {
     return id;
 }
 
-// Function to create shader program
-unsigned int createShaderProgram(const char* vertexShader, const char* fragmentShader) {
+// unsigned int createShaderProgram(const char* vertexShader, const char* fragmentShader) {
+unsigned int createShaderProgram(unsigned int vs, unsigned int fs) {
     unsigned int program = glCreateProgram();
-    unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
+    // unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
+    // unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
     
     glAttachShader(program, vs);
     glAttachShader(program, fs);
@@ -204,9 +172,19 @@ int main() {
         std::cerr << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-
+    std::string vertSource = loadShaderFile("shaders/texture.vert");
+    std::string fragSource = loadShaderFile("shaders/texture.frag");
+    
+    if (vertSource.empty() || fragSource.empty()) {
+        // Handle error (shader failed to load)
+        return -1;
+    }
+    
+    // Compile shaders
+    unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertSource.c_str());
+    unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragSource.c_str());
     // Create shader program
-    unsigned int shaderProgram = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+    unsigned int shaderProgram = createShaderProgram(vertexShader, fragmentShader);
 
     GLint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
     GLint panLoc = glGetUniformLocation(shaderProgram, "offset");
