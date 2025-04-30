@@ -80,7 +80,7 @@ float defaultZoomFactor = zoomFactor;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        float moveSpeed = 0.1f * zoomFactor; // Slower pan when zoomed in
+        float moveSpeed = 0.1f /  zoomFactor; // Slower pan when zoomed in
         switch (key) {
             case GLFW_KEY_W: yCenter += moveSpeed; break;
             case GLFW_KEY_S: yCenter -= moveSpeed; break;

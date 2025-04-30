@@ -44,10 +44,11 @@ void main()
 {
     vec2 ndc = (TexCoord * 2.0 - 1.0);// * vec2(aspectRatio, 1.0); // normalized coordinates [-1,1]
     ndc /= zoom;
-    vec2 uv = ndc * vec2(aspectRatio, 1.0) * 0.5 + 0.5;
+    vec2 uv = ndc * vec2(aspectRatio, 1.0) * 0.5 + 0.5 + center;
     // float checker = mod(floor(uv.x * 10.0) + floor(uv.y * 10.0), 2.0);
     float mb = iterateMandelbrot(uv, maxRepetitions); // * 255;
     // int mb = iterateMandelbrot(uv, maxRepetitions); 
-    vec3 color = vec3(mb);
+    // vec3 color = vec3(mb);
+    vec3 color = hsv2rgb(mb,1.0,0.9);
     FragColor = vec4(color, 1.0);
 }
