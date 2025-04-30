@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "linmath.h"
-#include "rainbow.h"
+// #include "rainbow.h"
  
 #include <stdlib.h>
 #include <stddef.h>
@@ -34,9 +34,6 @@ std::string loadShaderFile(const char* filePath) {
 }
 
 
-const float convergence_radius_squared = 4.0f;
-// const int MAX_REPS = 100;
-
 typedef struct SampleDimensions
 {
     float xCenter;
@@ -59,11 +56,8 @@ unsigned int compileShader(unsigned int type, const char* source) {
     return id;
 }
 
-// unsigned int createShaderProgram(const char* vertexShader, const char* fragmentShader) {
 unsigned int createShaderProgram(unsigned int vs, unsigned int fs) {
     unsigned int program = glCreateProgram();
-    // unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
-    // unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
     
     glAttachShader(program, vs);
     glAttachShader(program, fs);
@@ -83,55 +77,6 @@ unsigned int createShaderProgram(unsigned int vs, unsigned int fs) {
     return program;
 }
 
-/**
- * @brief
- * For a complex number c = a + bi, count how many iterations it takes
- * until the magnitude of z_n = z^2_n-1 + c is larger than 2.
- * 
- * @param a real value of input complex number
- * @param b imaginary value of input complex number
- * @param maxIterations after how many interations to stop
- */
-int iterateMandelbrot(float a, float b, int maxRepetitions)
-{
-    float tmp_a = a;
-    float tmp_b = b;
-    for (int i = 0; i < maxRepetitions; ++i) {
-        float original_a = tmp_a;
-        float original_b = tmp_b;
-        tmp_a = original_a*original_a - original_b*original_b + a;
-        tmp_b = 2*original_a*original_b + b;
-        if (tmp_a*tmp_a + tmp_b*tmp_b > convergence_radius_squared) {
-            return i;
-        }
-    }
-    return maxRepetitions;
-
-}
-
-void makeMandelbrot(unsigned char* textureData, int nx, int ny, float aspectRatio, SampleDimensions sd, int maxRepetitions) {
-    std::vector<float> r, g, b;
-    for (int i = 0; i <= maxRepetitions; ++i) {
-        float rr, gg, bb;
-        intToRainbowRGB(i, maxRepetitions, rr, gg, bb);
-        r.push_back(rr*256);
-        g.push_back(gg*256);
-        b.push_back(bb*256);
-    }
-    float xStart = sd.xCenter - sd.zoomFactor / 2;
-    float yStart = sd.yCenter - sd.zoomFactor / 2 / aspectRatio;
-    float dx = sd.zoomFactor;
-    float dy = sd.zoomFactor / aspectRatio;
-    for (int y = 0; y < ny; y++) {
-        float imag_0 = yStart + (float) y / ny * dy;
-        for (int x = 0; x < nx; x++) {
-            float real_0 = xStart + (float) x / nx * dx;
-            int nReps = iterateMandelbrot(real_0, imag_0, maxRepetitions);
-            textureData[(y * nx + x) * 3] = (float) nReps / maxRepetitions * 255;
-        }
-    }
-}
-
 
 int main() {
     int maxRepetitions = 10;
@@ -143,8 +88,6 @@ int main() {
     sd.xCenter = 0;
     sd.yCenter = 0;
     sd.zoomFactor = 1.f;
-
-
 
     SampleDimensions default_sd = sd;
     // Initialize GLFW
@@ -180,15 +123,13 @@ int main() {
         return -1;
     }
     
-    // Compile shaders
     unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertSource.c_str());
     unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragSource.c_str());
-    // Create shader program
     unsigned int shaderProgram = createShaderProgram(vertexShader, fragmentShader);
 
     GLint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
     GLint panLoc = glGetUniformLocation(shaderProgram, "offset");
-
+    GLint nRepsLoc = glGetUniformLocation(shaderProgram, "maxRepetitions");
 
     // Set up vertex data and buffers
     float vertices[] = {
@@ -241,14 +182,6 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // Generate some texture data
-    unsigned char* textureData = new unsigned char[texWidth * texHeight * 3];
-    makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd, maxRepetitions);
-
-
-    // Update entire texture
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-
 
     mat4x4 model, projection;
     mat4x4_identity(model);
@@ -286,9 +219,8 @@ int main() {
         if (update_vertices) {
             glUniform1f(zoomLoc, sd.zoomFactor);
             glUniform2f(panLoc, sd.xCenter, sd.yCenter);
-            makeMandelbrot(textureData, texWidth, texHeight, aspectRatio, sd, maxRepetitions);
+            glUniform1i(nRepsLoc, maxRepetitions);
             std::cout << "ZOOM FACTOR " << sd.zoomFactor << "X" << sd.xCenter << "Y" << sd.yCenter << "\n";
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, texWidth, texHeight, GL_RGB, GL_UNSIGNED_BYTE, textureData);
         }
 
 
@@ -316,7 +248,6 @@ int main() {
     }
 
     // Cleanup
-    delete[] textureData;
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
