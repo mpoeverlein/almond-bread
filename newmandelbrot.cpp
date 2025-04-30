@@ -30,14 +30,6 @@ std::string loadShaderFile(const char* filePath) {
     return buffer.str();
 }
 
-
-// typedef struct SampleDimensions
-// {
-//     float xCenter;
-//     float yCenter;
-//     float zoomFactor;
-// } SampleDimensions;
-
 unsigned int compileShader(unsigned int type, const char* source) {
     unsigned int id = glCreateShader(type);
     glShaderSource(id, 1, &source, nullptr);
@@ -157,8 +149,9 @@ int main() {
     unsigned int shaderProgram = createShaderProgram(vertexShader, fragmentShader);
 
     GLint zoomLoc = glGetUniformLocation(shaderProgram, "zoom");
-    GLint panLoc = glGetUniformLocation(shaderProgram, "offset");
+    GLint centerLoc = glGetUniformLocation(shaderProgram, "center");
     GLint nRepsLoc = glGetUniformLocation(shaderProgram, "maxRepetitions");
+    GLint aspectLoc = glGetUniformLocation(shaderProgram, "aspectRatio");
 
     // Set up vertex data and buffers
     float vertices[] = {
@@ -219,11 +212,12 @@ int main() {
     // Main render loop
     while (!glfwWindowShouldClose(window)) {
         glfwGetWindowSize(window, &width, &height);
-        const float aspectRatio = width / (float) height;
+        aspectRatio = width / (float) height;
 
         glUniform1f(zoomLoc, zoomFactor);
-        glUniform2f(panLoc, xCenter, yCenter);
+        glUniform2f(centerLoc, xCenter, yCenter);
         glUniform1i(nRepsLoc, maxRepetitions);
+        glUniform1f(aspectLoc, aspectRatio);
         std::cout << "ZOOM FACTOR " << zoomFactor << "X" << xCenter << "Y" << yCenter << "\n";
 
 

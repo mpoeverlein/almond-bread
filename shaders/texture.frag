@@ -1,8 +1,9 @@
 #version 330 core
 in vec2 TexCoord;
 out vec4 FragColor;
+uniform float aspectRatio = 1.0f; // dummy value
 uniform float zoom = 1.0;     // Zoom factor
-uniform vec2 offset = vec2(0.0); // Pan offset
+uniform vec2 center = vec2(0.5); // Pan center
 uniform int maxRepetitions = 10;
 const float convergence_radius_squared = 4.0f;
 
@@ -41,7 +42,9 @@ float iterateMandelbrot(vec2 uv, int maxRepetitions) {
 
 void main()
 {
-    vec2 uv = TexCoord * zoom + offset;
+    vec2 ndc = (TexCoord * 2.0 - 1.0);// * vec2(aspectRatio, 1.0); // normalized coordinates [-1,1]
+    ndc /= zoom;
+    vec2 uv = ndc * vec2(aspectRatio, 1.0) * 0.5 + 0.5;
     // float checker = mod(floor(uv.x * 10.0) + floor(uv.y * 10.0), 2.0);
     float mb = iterateMandelbrot(uv, maxRepetitions); // * 255;
     // int mb = iterateMandelbrot(uv, maxRepetitions); 
