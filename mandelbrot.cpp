@@ -23,9 +23,9 @@ const float margin = 0.0;
 // initial range from (boundary - i boundary) to (boundary + i boundary)
 const float boundary = 1.1;
 
-// float real_0 = -0.6f;
-// float imaginary_0 = 0.0f;
-// float zoom_factor = 1.0f;
+float real_0 = -0.6f;
+float imaginary_0 = 0.0f;
+float zoom_factor = 1.0f;
 
 // float real_0 = -1.21235;
 // float imaginary_0 = 0.318563;
@@ -35,9 +35,9 @@ const float boundary = 1.1;
 // float imaginary_0 = 0.318989;
 // float zoom_factor = 1/1.41981e-05;
 
-float real_0 = -1.21235;
-float imaginary_0 = 0.17145;
-float zoom_factor = 21.1809;
+// float real_0 = -1.21235;
+// float imaginary_0 = 0.17145;
+// float zoom_factor = 21.1809;
 
 // holds information about each calculated complex number
 typedef struct Vertex
@@ -163,7 +163,7 @@ std::vector<Vertex> createVertices(int width, int height)
 
     std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
     // createRGBVectors(nIterations, r, g, b, intToRainbowRGB);
-    createRGBVectors(nIterations, r, g, b, intToBWRGB);
+    createRGBVectors(nIterations, r, g, b, intToInferno);
     
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
@@ -209,7 +209,7 @@ void updateVertices(std::vector<Vertex> &vertices, int width, int height)
     populateVector(yInput, dimensions.yStart, dimensions.dy);
 
     std::vector<float> r(nIterations+1), g(nIterations+1), b(nIterations+1);
-    createRGBVectors(nIterations, r, g, b, intToBWRGB);
+    createRGBVectors(nIterations, r, g, b, intToInferno);
 
     std::vector<float> yPlotValues(ySteps), xPlotValues(xSteps);
     calculatePlotValues(yPlotValues, yInput, dimensions.yStart, dimensions.yEnd, margin);
