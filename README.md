@@ -1,7 +1,7 @@
 # almond-bread
 Explorer for the Mandelbrot set written in C++ with GLFW3. 
 The Mandelbrot set is the set of all points $z\in\mathbf{C}$ for which the series
-$$ z_{n+1} = z_n^2 + c $$ with $c = 0$ is bounded, i.e., $z_n < \infty \forall n$. 
+$ z_{n+1} = z_n^2 + c $ with $c = 0$ is bounded, i.e., $z_n < \infty \forall n$. 
 This explorer depicts
 
 ![Window of the Mandelbrot explorer](preview.png)
