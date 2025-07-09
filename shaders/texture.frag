@@ -49,6 +49,7 @@ void main()
     float mb = iterateMandelbrot(uv, maxRepetitions); // * 255;
     // int mb = iterateMandelbrot(uv, maxRepetitions); 
     // vec3 color = vec3(mb);
-    vec3 color = hsv2rgb(mb,1.0,0.9);
+    vec3 color = hsv2rgb(mb,1.0,1.0);
     FragColor = vec4(color, 1.0);
+    // FragColor = vec4(uv, 0.0, 1.0);
 }
