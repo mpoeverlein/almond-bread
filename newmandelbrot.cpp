@@ -77,6 +77,8 @@ float zoomFactor = 1.f;
 float defaultXCenter = xCenter;
 float defaultYCenter = yCenter;
 float defaultZoomFactor = zoomFactor;
+int currentFuncIndex = 0; // or 1, etc.
+const int lengthFuncIndices = 4;
 
 void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
@@ -90,6 +92,7 @@ void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
             case GLFW_KEY_E: zoomFactor /= 1.1f; break; // Zoom out
             case GLFW_KEY_M: maxRepetitions += 10; break;
             case GLFW_KEY_N: maxRepetitions = std::max(10,maxRepetitions-10); break;
+            case GLFW_KEY_C: currentFuncIndex = (currentFuncIndex + 1) % lengthFuncIndices; break;
             case GLFW_KEY_UP: yCenter += moveSpeed; break;
             case GLFW_KEY_DOWN: yCenter -= moveSpeed; break;
             case GLFW_KEY_LEFT: xCenter -= moveSpeed; break;
@@ -217,6 +220,7 @@ int main() {
         glUniform2f(centerLoc, xCenter, yCenter);
         glUniform1i(nRepsLoc, maxRepetitions);
         glUniform1f(aspectLoc, aspectRatio);
+        glUniform1i(glGetUniformLocation(shaderProgram, "colorFuncIndex"), currentFuncIndex);
         // std::cout << "ZOOM FACTOR " << zoomFactor << "X" << xCenter << "Y" << yCenter << "\n";
 
 
