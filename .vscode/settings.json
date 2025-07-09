@@ -57,6 +57,8 @@
         "variant": "cpp",
         "__nullptr": "cpp",
         "compare": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "complex": "cpp",
+        "chrono": "cpp"
     }
 }
