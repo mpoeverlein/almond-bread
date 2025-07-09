@@ -119,7 +119,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // Create window
-    GLFWwindow* window = glfwCreateWindow(width, height, "Texture Example", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(width, height, "Mandelbrot Explorer", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -217,7 +217,7 @@ int main() {
         glUniform2f(centerLoc, xCenter, yCenter);
         glUniform1i(nRepsLoc, maxRepetitions);
         glUniform1f(aspectLoc, aspectRatio);
-        std::cout << "ZOOM FACTOR " << zoomFactor << "X" << xCenter << "Y" << yCenter << "\n";
+        // std::cout << "ZOOM FACTOR " << zoomFactor << "X" << xCenter << "Y" << yCenter << "\n";
 
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
